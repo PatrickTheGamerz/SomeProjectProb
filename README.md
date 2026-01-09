@@ -1,66 +1,73 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>OmniAI Assistant</title>
+  <meta charset="utf-8"/>
+  <title>Single‑File ChatGPT‑style</title>
   <style>
-    body { font-family: sans-serif; background: #f4f4f4; padding: 2rem; }
-    #chat { max-width: 600px; margin: auto; background: white; padding: 1rem; border-radius: 8px; }
-    .msg { margin: 1rem 0; }
-    .user { font-weight: bold; color: #333; }
-    .bot { color: #007acc; }
-    input, button { padding: 0.5rem; font-size: 1rem; }
+    body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:20px}
+    #log{height:60vh;overflow:auto;border:1px solid #ddd;padding:10px}
+    .user{color:#0b5; margin:6px 0}
+    .bot{color:#06f; margin:6px 0}
+    textarea{width:100%;height:70px}
+    input[type=text]{width:100%}
   </style>
 </head>
 <body>
-  <div id="chat">
-    <h2>🤖 OmniAI Assistant</h2>
-    <div id="messages"></div>
-    <input id="input" placeholder="Ask me anything..." />
-    <button onclick="send()">Send</button>
-  </div>
+  <h3>Single‑file Chat (OpenAI)</h3>
+  <p><strong>Security note:</strong> do not paste a production key on public machines.</p>
+  <label>OpenAI API key (paste for this session):</label>
+  <input id="key" type="text" placeholder="sk-..." />
+  <div id="log"></div>
+  <textarea id="msg" placeholder="Type your message"></textarea>
+  <button id="send">Send</button>
 
-  <script>
-    const messages = document.getElementById("messages");
-    const input = document.getElementById("input");
+<script>
+const log = (who, text) => {
+  const d = document.createElement('div');
+  d.className = who==='user'?'user':'bot';
+  d.textContent = (who==='user'?'You: ':'Bot: ')+text;
+  document.getElementById('log').appendChild(d);
+  document.getElementById('log').scrollTop = 1e9;
+};
 
-    async function send() {
-      const text = input.value.trim();
-      if (!text) return;
-      append("You", text, "user");
-      input.value = "";
-
-      if (text.toLowerCase().startsWith("wiki ")) {
-        const topic = text.slice(5);
-        const summary = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topic)}`)
-          .then(res => res.json())
-          .then(data => data.extract || "No summary found.")
-          .catch(() => "Error fetching Wikipedia.");
-        append("OmniAI", summary, "bot");
-        return;
-      }
-
-      const response = await fetch("https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium", {
-        method: "POST",
-        headers: {
-          "Authorization": "Bearer YOUR_HUGGINGFACE_API_KEY",  // Replace with your key
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ inputs: { text } })
-      }).then(res => res.json());
-
-      const reply = response.generated_text || "Sorry, I couldn't think of a reply.";
-      append("OmniAI", reply, "bot");
+async function send() {
+  const key = document.getElementById('key').value.trim();
+  if(!key){alert('Paste your OpenAI key'); return;}
+  const user = document.getElementById('msg').value.trim();
+  if(!user) return;
+  log('user', user);
+  document.getElementById('msg').value = '';
+  // Minimal chat history kept client-side
+  const messages = [{role:'user', content:user}];
+  try {
+    const resp = await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+key
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: messages,
+        max_tokens: 500,
+        temperature: 0.7
+      })
+    });
+    if(!resp.ok){
+      const t = await resp.text();
+      log('bot','Error: '+resp.status+' '+t);
+      return;
     }
+    const j = await resp.json();
+    const text = j.choices?.[0]?.message?.content || '[no reply]';
+    log('bot', text);
+  } catch(e){
+    log('bot','Network error: '+e.message);
+  }
+}
 
-    function append(sender, text, cls) {
-      const div = document.createElement("div");
-      div.className = "msg " + cls;
-      div.innerHTML = `<strong>${sender}:</strong> ${text}`;
-      messages.appendChild(div);
-      messages.scrollTop = messages.scrollHeight;
-    }
-  </script>
+document.getElementById('send').onclick = send;
+document.getElementById('msg').addEventListener('keydown', e=>{ if(e.key==='Enter' && (e.ctrlKey||e.metaKey)) send(); });
+</script>
 </body>
 </html>
