@@ -3,33 +3,29 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Dark AI Chat — Single File</title>
+<title>Dark Chat — Greeting Bot</title>
 <style>
   :root{
-    --bg:#0b0f14;
-    --card:#0f1720;
+    --bg:#071018;
+    --panel:#0f1720;
     --muted:#9aa6b2;
-    --accent:#7c5cff;
-    --accent-2:#00d4ff;
-    --user:#1f2937;
-    --bot:#0b1220;
+    --accent1:#7c5cff;
+    --accent2:#00d4ff;
     --glass: rgba(255,255,255,0.03);
-    --radius:14px;
+    --radius:16px;
     --gap:14px;
     font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   }
-
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
     margin:0;
     background:
-      radial-gradient(800px 400px at 10% 10%, rgba(124,92,255,0.08), transparent 8%),
-      radial-gradient(600px 300px at 90% 90%, rgba(0,212,255,0.04), transparent 8%),
+      radial-gradient(600px 300px at 10% 10%, rgba(124,92,255,0.06), transparent 8%),
+      radial-gradient(500px 260px at 90% 90%, rgba(0,212,255,0.03), transparent 8%),
       var(--bg);
     color:#e6eef6;
     -webkit-font-smoothing:antialiased;
-    -moz-osx-font-smoothing:grayscale;
     display:flex;
     align-items:center;
     justify-content:center;
@@ -38,50 +34,41 @@
 
   .app {
     width:100%;
-    max-width:920px;
-    height:80vh;
+    max-width:980px;
+    height:84vh;
     background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
     border-radius:20px;
-    box-shadow: 0 10px 30px rgba(2,6,23,0.7), inset 0 1px 0 rgba(255,255,255,0.02);
+    box-shadow: 0 18px 50px rgba(2,6,23,0.7), inset 0 1px 0 rgba(255,255,255,0.02);
     display:grid;
     grid-template-columns: 320px 1fr;
     overflow:hidden;
   }
 
-  /* Sidebar */
-  .sidebar{
-    background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+  /* Left column (controls / chats) */
+  .left {
     padding:20px;
-    border-right: 1px solid rgba(255,255,255,0.03);
+    border-right:1px solid rgba(255,255,255,0.03);
+    background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
     display:flex;
     flex-direction:column;
     gap:12px;
   }
-  .brand{
+  .brand {
     display:flex;
     gap:12px;
     align-items:center;
   }
-  .logo{
-    width:44px;
-    height:44px;
-    border-radius:10px;
-    background: linear-gradient(135deg,var(--accent),var(--accent-2));
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:700;
-    color:white;
-    box-shadow: 0 6px 18px rgba(124,92,255,0.12);
+  .logo {
+    width:52px;height:52px;border-radius:12px;
+    background: linear-gradient(135deg,var(--accent1),var(--accent2));
+    display:flex;align-items:center;justify-content:center;font-weight:700;color:white;
+    box-shadow: 0 8px 30px rgba(124,92,255,0.12);
+    font-size:18px;
   }
-  .brand h1{
-    font-size:16px;
-    margin:0;
-    letter-spacing:0.2px;
-  }
-  .brand p{margin:0;font-size:12px;color:var(--muted)}
+  .brand h1{margin:0;font-size:18px}
+  .brand p{margin:0;color:var(--muted);font-size:13px}
 
-  .conversations{
+  .conversations {
     margin-top:6px;
     display:flex;
     flex-direction:column;
@@ -89,28 +76,36 @@
     overflow:auto;
     padding-right:6px;
   }
-  .conv{
-    background:var(--glass);
-    padding:10px 12px;
-    border-radius:10px;
+  .conv {
+    background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+    padding:12px;
+    border-radius:12px;
     color:var(--muted);
     font-size:13px;
     cursor:pointer;
-    transition:all .18s ease;
+    transition:all .16s ease;
+    display:flex;
+    align-items:center;
+    gap:10px;
   }
-  .conv:hover{transform:translateY(-3px); box-shadow: 0 6px 18px rgba(2,6,23,0.5)}
-  .conv.active{background:linear-gradient(90deg, rgba(124,92,255,0.12), rgba(0,212,255,0.04)); color:#fff}
+  .conv:hover{transform:translateY(-4px); box-shadow: 0 10px 30px rgba(2,6,23,0.45)}
+  .conv.active{background:linear-gradient(90deg, rgba(124,92,255,0.10), rgba(0,212,255,0.03)); color:#fff}
 
-  .sidebar .footer{
+  .conv .mini {
+    width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center;font-weight:600;
+  }
+
+  .left .footer{
     margin-top:auto;
     font-size:12px;
     color:var(--muted);
     display:flex;
     gap:8px;
     align-items:center;
+    justify-content:space-between;
   }
 
-  /* Chat area */
+  /* Right column (chat) */
   .chat {
     display:flex;
     flex-direction:column;
@@ -128,7 +123,12 @@
     gap:12px;
     align-items:center;
   }
-  .chat-title h2{margin:0;font-size:16px}
+  .avatar {
+    width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent1),var(--accent2));
+    display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:20px;
+    box-shadow: 0 10px 30px rgba(124,92,255,0.12);
+  }
+  .chat-title h2{margin:0;font-size:18px}
   .chat-title p{margin:0;color:var(--muted);font-size:13px}
 
   .messages{
@@ -137,24 +137,27 @@
     padding:8px;
     display:flex;
     flex-direction:column;
-    gap:12px;
+    gap:14px;
     scroll-behavior:smooth;
   }
 
+  .row{display:flex;gap:10px;align-items:flex-end}
   .bubble{
-    max-width:72%;
+    max-width:74%;
     padding:12px 14px;
     border-radius:14px;
     line-height:1.35;
-    font-size:14px;
-    box-shadow: 0 6px 18px rgba(2,6,23,0.45);
+    font-size:15px;
+    box-shadow: 0 8px 30px rgba(2,6,23,0.45);
     word-break:break-word;
+    position:relative;
   }
   .bubble.user{
     margin-left:auto;
     background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
     color:#e6eef6;
     border-bottom-right-radius:6px;
+    border:1px solid rgba(255,255,255,0.02);
   }
   .bubble.bot{
     margin-right:auto;
@@ -167,7 +170,11 @@
   .meta{
     font-size:12px;
     color:var(--muted);
-    margin-top:6px;
+    margin-top:8px;
+  }
+
+  .time {
+    font-size:11px;color:var(--muted);margin-left:8px;
   }
 
   /* Typing indicator */
@@ -187,7 +194,7 @@
   .dot:nth-child(3){animation-delay:.3s}
   @keyframes blink{0%{opacity:.15}50%{opacity:1}100%{opacity:.15}}
 
-  /* Input area */
+  /* Composer */
   .composer{
     display:flex;
     gap:10px;
@@ -201,7 +208,7 @@
     gap:8px;
     align-items:center;
     background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
-    padding:10px;
+    padding:12px;
     border-radius:12px;
     border:1px solid rgba(255,255,255,0.02);
   }
@@ -210,19 +217,19 @@
     border:0;
     outline:0;
     color:#e6eef6;
-    font-size:14px;
+    font-size:15px;
     width:100%;
   }
   .send{
-    background:linear-gradient(90deg,var(--accent),var(--accent-2));
+    background:linear-gradient(90deg,var(--accent1),var(--accent2));
     border:0;
     color:white;
     padding:10px 14px;
     border-radius:10px;
     cursor:pointer;
-    font-weight:600;
-    box-shadow: 0 8px 30px rgba(124,92,255,0.12);
-    transition:transform .12s ease;
+    font-weight:700;
+    box-shadow: 0 10px 30px rgba(124,92,255,0.12);
+    transition:transform .12s ease, opacity .12s ease;
   }
   .send:active{transform:translateY(1px)}
   .send:disabled{opacity:.5;cursor:not-allowed}
@@ -230,54 +237,63 @@
   /* small screens */
   @media (max-width:880px){
     .app{grid-template-columns:1fr; height:92vh}
-    .sidebar{display:none}
+    .left{display:none}
     .chat{padding:16px}
   }
 </style>
 </head>
 <body>
-  <main class="app" role="application" aria-label="AI chat">
-    <aside class="sidebar" aria-hidden="false">
+  <main class="app" role="application" aria-label="Chat">
+    <aside class="left" aria-hidden="false">
       <div class="brand">
-        <div class="logo">AI</div>
+        <div class="logo">DC</div>
         <div>
           <h1>Dark Chat</h1>
-          <p>Local demo • Replies: Hi or Hello</p>
+          <p style="opacity:.9">A refined local greeting demo</p>
         </div>
       </div>
 
       <div class="conversations" id="conversations" aria-hidden="false">
-        <div class="conv active">New chat</div>
+        <div class="conv active" title="New conversation">
+          <div class="mini">1</div>
+          <div>
+            <div style="font-weight:600">Conversation</div>
+            <div style="font-size:12px;color:var(--muted)">Say hello to begin</div>
+          </div>
+        </div>
       </div>
 
       <div class="footer">
-        <div style="flex:1;color:var(--muted);font-size:13px">No backend • Privacy friendly</div>
-        <div style="font-size:12px;color:var(--muted)">v1.0</div>
+        <div style="color:var(--muted);font-size:13px">Made for quick local demos</div>
+        <div style="font-size:12px;color:var(--muted)">v2.0</div>
       </div>
     </aside>
 
     <section class="chat" aria-live="polite">
       <header class="chat-header">
         <div class="chat-title">
-          <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:700">B</div>
+          <div class="avatar">B</div>
           <div>
-            <h2>Bot</h2>
-            <p>Built-in responder that only says Hi or Hello</p>
+            <h2>Dark Chat</h2>
+            <p style="opacity:.9">A small, elegant local responder</p>
           </div>
         </div>
-        <div style="color:var(--muted);font-size:13px">Local demo</div>
+        <div style="color:var(--muted);font-size:13px">No network required</div>
       </header>
 
       <div class="messages" id="messages" role="log" aria-live="polite" aria-atomic="false">
-        <div class="bubble bot" id="welcome">
-          Hello — this demo bot only replies with Hi or Hello. Try typing anything and press Enter.
-          <div class="meta">Polished dark UI • No network required</div>
+        <div class="row">
+          <div class="bubble bot" id="welcome">
+            <strong style="display:block;margin-bottom:8px">Welcome.</strong>
+            This is a compact, local chat interface. Try sending a greeting — for example: <em>hi</em>, <em>hello</em>, <em>hey</em>, or <em>good morning</em>. The responder will reply only to greetings; other messages are kept private to your browser.
+            <div class="meta">Tip: press <strong>Enter</strong> to send. Double‑click the message area to reset the conversation.</div>
+          </div>
         </div>
       </div>
 
       <div class="composer" aria-hidden="false">
         <div class="input" role="search">
-          <input id="input" type="text" placeholder="Type a message and press Enter" aria-label="Message input" autocomplete="off" />
+          <input id="input" type="text" placeholder="Say something (try a greeting)" aria-label="Message input" autocomplete="off" />
         </div>
         <button id="send" class="send" title="Send message">Send</button>
       </div>
@@ -290,61 +306,102 @@
   const inputEl = document.getElementById('input');
   const sendBtn = document.getElementById('send');
 
-  // Utility to create message bubble
-  function addBubble(text, who='bot', meta=''){
-    const el = document.createElement('div');
-    el.className = 'bubble ' + who;
-    el.textContent = text;
-    if(meta){
-      const m = document.createElement('div');
-      m.className = 'meta';
-      m.textContent = meta;
-      el.appendChild(m);
-    }
-    messagesEl.appendChild(el);
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-    return el;
+  // Greeting detection (simple, case-insensitive)
+  const greetingPatterns = [
+    /^hi\b/i,
+    /^hello\b/i,
+    /^hey\b/i,
+    /\bgood (morning|afternoon|evening)\b/i,
+    /\bgreetings\b/i,
+    /^yo\b/i,
+    /^sup\b/i
+  ];
+
+  function isGreeting(text){
+    if(!text) return false;
+    const t = text.trim();
+    return greetingPatterns.some(rx => rx.test(t));
   }
 
-  // Typing indicator element
+  function nowTime(){
+    const d = new Date();
+    return d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  }
+
+  function addBubble(text, who='bot', opts = {}){
+    const row = document.createElement('div');
+    row.className = 'row';
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble ' + who;
+    bubble.innerHTML = text;
+    row.appendChild(bubble);
+
+    const time = document.createElement('div');
+    time.className = 'time';
+    time.textContent = nowTime();
+    row.appendChild(time);
+
+    messagesEl.appendChild(row);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return bubble;
+  }
+
   function showTyping(){
     const wrap = document.createElement('div');
-    wrap.className = 'bubble bot typing';
-    wrap.setAttribute('data-typing','true');
-    wrap.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+    wrap.className = 'row';
+    const typing = document.createElement('div');
+    typing.className = 'bubble bot typing';
+    typing.setAttribute('data-typing','true');
+    typing.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+    wrap.appendChild(typing);
+    const time = document.createElement('div');
+    time.className = 'time';
+    time.textContent = nowTime();
+    wrap.appendChild(time);
     messagesEl.appendChild(wrap);
     messagesEl.scrollTop = messagesEl.scrollHeight;
     return wrap;
   }
 
-  // Bot reply logic: only "Hi" or "Hello"
-  function botReply(){
-    // Choose randomly but keep it simple
-    const choices = ['Hi', 'Hello'];
-    return choices[Math.floor(Math.random()*choices.length)];
+  // Polished replies: varied greetings and small friendly variants
+  const replies = [
+    'Hi.',
+    'Hello.',
+    'Hey there.',
+    'Hello — nice to see you.',
+    'Hi — hope you are well.',
+    'Hey!'
+  ];
+
+  function chooseReply(){
+    return replies[Math.floor(Math.random()*replies.length)];
   }
 
-  // Send flow
   function sendMessage(){
     const text = inputEl.value.trim();
     if(!text) return;
-    // Append user bubble
-    addBubble(text, 'user');
+    // Add user bubble
+    addBubble(escapeHtml(text), 'user');
     inputEl.value = '';
     inputEl.focus();
 
-    // Show typing
-    const typingEl = showTyping();
+    // If it's a greeting, bot replies; otherwise remain silent
+    if(isGreeting(text)){
+      const typingRow = showTyping();
+      const delay = 500 + Math.random()*700;
+      setTimeout(() => {
+        typingRow.remove();
+        addBubble(escapeHtml(chooseReply()), 'bot');
+      }, delay);
+    } else {
+      // No reply: subtle UX cue (no bot message). Optionally, we could show a tiny muted hint.
+      // For now, do nothing so the bot stays silent.
+    }
+  }
 
-    // Simulate thinking time (short)
-    const delay = 600 + Math.random()*700;
-    setTimeout(() => {
-      // remove typing
-      typingEl.remove();
-      // Add bot reply (only Hi/Hello)
-      const reply = botReply();
-      addBubble(reply, 'bot');
-    }, delay);
+  // Escape HTML to avoid injection
+  function escapeHtml(str){
+    return str.replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]; });
   }
 
   // Event listeners
@@ -356,18 +413,18 @@
     }
   });
 
-  // Accessibility: focus input on load
+  // Focus input on load
   window.addEventListener('load', () => inputEl.focus());
 
-  // Optional: allow double-click to clear chat
+  // Double-click to clear chat and restore welcome
   messagesEl.addEventListener('dblclick', () => {
-    if(confirm('Clear chat history?')){
+    if(confirm('Clear conversation?')){
       messagesEl.innerHTML = '';
-      addBubble('Hello — this demo bot only replies with Hi or Hello. Try typing anything and press Enter.','bot','Polished dark UI • No network required');
+      addBubble('<strong style="display:block;margin-bottom:8px">Welcome.</strong> This is a compact, local chat interface. Try sending a greeting — for example: <em>hi</em>, <em>hello</em>, <em>hey</em>, or <em>good morning</em>. The responder will reply only to greetings; other messages are kept private to your browser.<div class="meta">Tip: press <strong>Enter</strong> to send. Double‑click the message area to reset the conversation.</div>', 'bot');
     }
   });
 
-  // Small enhancement: keyboard shortcut Ctrl+K to focus input
+  // Ctrl/Cmd+K to focus input
   window.addEventListener('keydown', (e) => {
     if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k'){
       e.preventDefault();
@@ -375,6 +432,7 @@
       inputEl.select();
     }
   });
+
 })();
 </script>
 </body>
